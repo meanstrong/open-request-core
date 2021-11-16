@@ -97,4 +97,4 @@ class Client(object):
 
     def should_exception(self, status_code, headers, content):
         if status_code < 200 or status_code >= 300:
-            return ServerException(status_code, content)
+            raise ServerException(status_code, content)
