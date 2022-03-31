@@ -28,3 +28,7 @@ class DictResponse(ContentResponse, dict):
 
     def __str__(self):
         return self.content.decode(self._encoding)
+
+
+JsonResponse = DictResponse
+ByteResponse = ContentResponse

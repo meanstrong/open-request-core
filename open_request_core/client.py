@@ -20,11 +20,18 @@ logger = logging.getLogger("open-request-core")
 
 
 class Client(object):
-    def __init__(self, base_url: str, timeout=3, https_verify=False, max_retries=3):
+    def __init__(self, base_url: str, timeout=3, https_verify=False, max_retries=3, debug=False):
         self.__base_url = base_url
         self.__timeout = timeout
         self.__https_verify = https_verify
         self.__max_retries = max_retries
+        self.__debug = debug
+
+    def is_debug(self):
+        return self.__debug
+
+    def enable_debug(self, debug: bool):
+        self.__debug = debug
 
     def get_baseurl(self):
         return self.__base_url
@@ -80,7 +87,8 @@ class Client(object):
         retries = 0
         while True:
             retries += 1
-            logger.debug("client do action send request: {}".format(request))
+            if self.is_debug():
+                logger.debug("client do action send request: {}".format(request))
             status_code, headers, content = self._handle_single_request(request)
             if retries > self.__max_retries:
                 break
@@ -89,7 +97,8 @@ class Client(object):
             self.should_exception(status_code, headers, content)
             break
         resp = request.resp_cls(content)
-        logger.debug("client do action get response: {}".format(resp))
+        if self.is_debug():
+            logger.debug("client do action get response: {}".format(resp))
         return resp
 
     def should_retry(self, status_code, headers, content) -> bool:
