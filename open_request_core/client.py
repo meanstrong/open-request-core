@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # coding=utf-8
 from __future__ import annotations
-from typing import TypeVar, TYPE_CHECKING
-import logging
 
-import requests
+import http.client as httplib
+import json
+import logging
+from typing import TYPE_CHECKING, TypeVar
+from urllib.parse import urlencode, urlparse
 
 from .exception import ServerException
-
 
 if TYPE_CHECKING:
     from .request import Request
@@ -15,22 +16,39 @@ if TYPE_CHECKING:
 
     TResponse = TypeVar("TResponse", bound=ContentResponse)
 
-__all__ = ["Client"]
 logger = logging.getLogger("open-request-core")
 
 
-class Client(object):
-    def __init__(self, base_url: str, timeout=3, https_verify=False, max_retries=3):
+class HTTPClient(object):
+    def __init__(self, base_url: str, timeout=3, max_retries=3):
         self.__base_url = base_url
         self.__timeout = timeout
-        self.__https_verify = https_verify
         self.__max_retries = max_retries
+        self._is_opened = False
 
-    def get_baseurl(self):
+    def __enter__(self):
+        self.open()
+        return self
+
+    def open(self):
+        parsed_url = urlparse(self.__base_url)
+        self._conn = httplib.HTTPConnection(parsed_url.hostname, parsed_url.port, self.__timeout)
+        self._conn.connect()
+        self._is_opened = True
+
+    def __exit__(self, *args):
+        self.close()
+
+    def close(self):
+        if self._is_opened:
+            self._conn.close()
+        self._is_opened = False
+
+    def get_base_url(self):
         return self.__base_url
 
-    def set_baseurl(self, baseurl):
-        self.__base_url = baseurl
+    def set_base_url(self, base_url: str):
+        self.__base_url = base_url
 
     def get_timeout(self):
         return self.__timeout
@@ -63,18 +81,34 @@ class Client(object):
             url = self.__base_url + "/" + uri
         else:
             url = self.__base_url + uri
-        resp = requests.request(
-            method=request.get_method(),
-            url=url,
-            params=self.get_signed_query_params(request),
-            data=request.get_data(),
-            headers=self.get_signed_headers(request),
-            json=request.get_json(),
-            files=request.get_files(),
-            verify=self.__https_verify,
-            timeout=self.__timeout,
-        )
-        return resp.status_code, resp.headers, resp.content
+        request_uri = urlparse(url).path
+        query_params = self.get_signed_query_params(request)
+        if query_params:
+            request_uri += "?" + urlencode(query_params)
+        body = None
+        if request.get_data():
+            body = request.get_data()
+        elif request.get_json():
+            body = json.dumps(request.get_json()).encode("utf-8")
+        if self._is_opened:
+            self._conn.request(
+                method=request.get_method(),
+                url=request_uri,
+                body=body,
+                headers=self.get_signed_headers(request),
+            )
+            resp = self._conn.getresponse()
+            return resp.status, resp.getheaders(), resp.read()
+        else:
+            with self:
+                self._conn.request(
+                    method=request.get_method(),
+                    url=request_uri,
+                    body=body,
+                    headers=self.get_signed_headers(request),
+                )
+                resp = self._conn.getresponse()
+                return resp.status, resp.getheaders(), resp.read()
 
     def do_action(self, request: Request[TResponse]) -> TResponse:
         retries = 0
@@ -98,3 +132,11 @@ class Client(object):
     def should_exception(self, status_code, headers, content):
         if status_code < 200 or status_code >= 300:
             raise ServerException(status_code, content)
+
+
+class HTTPSClient(HTTPClient):
+    def open(self):
+        parsed_url = urlparse(self.get_base_url())
+        self._conn = httplib.HTTPSConnection(parsed_url.hostname, parsed_url.port, self.get_timeout())
+        self._conn.connect()
+        self._is_opened = True

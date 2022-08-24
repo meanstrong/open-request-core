@@ -20,7 +20,9 @@ setup(
     name="open-request-core",
     version=open_request_core.__version__,
     packages=find_packages(exclude=["test*"]),
-    install_requires=["requests"],
+    extras_require={
+        "requests": ["requests"],
+    },
     description="This is the core module of standard use for requests.",
     long_description=long_description,
     long_description_content_type="text/markdown",
