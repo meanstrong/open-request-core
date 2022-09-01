@@ -67,7 +67,6 @@ class Client(HTTPClient):
                 data=request.get_data(),
                 headers=self.get_signed_headers(request),
                 json=request.get_json(),
-                # files=request.get_files(),
                 verify_ssl=self.__https_verify,
                 timeout=self.get_timeout(),
             ) as resp:
@@ -81,7 +80,6 @@ class Client(HTTPClient):
                     data=request.get_data(),
                     headers=self.get_signed_headers(request),
                     json=request.get_json(),
-                    # files=request.get_files(),
                     verify_ssl=self.__https_verify,
                     timeout=self.get_timeout(),
                 ) as resp:
@@ -100,5 +98,5 @@ class Client(HTTPClient):
             self.should_exception(status_code, headers, content)
             break
         resp = request.resp_cls(content)
-        logger.warning("client do action get response: {}".format(resp))
+        logger.debug("client do action get response: {}".format(resp))
         return resp
