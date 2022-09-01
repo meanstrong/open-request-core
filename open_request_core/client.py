@@ -59,6 +59,9 @@ class HTTPClient(object):
     def get_https_verify(self):
         return self.__https_verify
 
+    def get_max_retries(self):
+        return self.__max_retries
+
     def get_signed_headers(self, request: Request):
         return request.get_headers()
 
