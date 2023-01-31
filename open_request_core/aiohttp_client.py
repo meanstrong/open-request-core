@@ -6,12 +6,12 @@ import logging
 
 import aiohttp
 
-from .client import HTTPClient
+from .http_client import HTTPClient
 
 
 if TYPE_CHECKING:
-    from .request import Request
-    from .response import ContentResponse
+    from .http_request import Request
+    from .http_response import ContentResponse
 
     TResponse = TypeVar("TResponse", bound=ContentResponse)
 
@@ -89,7 +89,7 @@ class Client(HTTPClient):
         retries = 0
         while True:
             retries += 1
-            logger.debug("client do action send request: {}".format(request))
+            logger.debug(f"{self.__class__.__name__} do action send request: {request}")
             status_code, headers, content = await self._handle_single_request(request)
             if retries > self.get_max_retries():
                 break
@@ -98,5 +98,5 @@ class Client(HTTPClient):
             self.should_exception(status_code, headers, content)
             break
         resp = request.resp_cls(content)
-        logger.debug("client do action get response: {}".format(resp))
+        logger.debug(f"{self.__class__.__name__} do action get response: {resp}")
         return resp

@@ -11,10 +11,10 @@ from urllib.parse import urlencode, urlparse
 from .exception import ServerException
 
 if TYPE_CHECKING:
-    from .request import Request
-    from .response import ContentResponse
+    from .http_request import Request
+    from .http_response import ByteResponse
 
-    TResponse = TypeVar("TResponse", bound=ContentResponse)
+    TResponse = TypeVar("TResponse", bound=ByteResponse)
 
 logger = logging.getLogger("open-request-core")
 
@@ -117,7 +117,7 @@ class HTTPClient(object):
         retries = 0
         while True:
             retries += 1
-            logger.debug("client do action send request: {}".format(request))
+            logger.debug(f"{self.__class__.__name__} do action send request: {request}")
             status_code, headers, content = self._handle_single_request(request)
             if retries > self.__max_retries:
                 break
@@ -126,7 +126,7 @@ class HTTPClient(object):
             self.should_exception(status_code, headers, content)
             break
         resp = request.resp_cls(content)
-        logger.debug("client do action get response: {}".format(resp))
+        logger.debug(f"{self.__class__.__name__} do action get response: {resp}")
         return resp
 
     def should_retry(self, status_code, headers, content) -> bool:

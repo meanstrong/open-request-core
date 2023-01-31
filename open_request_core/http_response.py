@@ -1,11 +1,10 @@
 # coding=utf-8
-from __future__ import annotations
 import json
 
-__all__ = ["ContentResponse", "DictResponse"]
+__all__ = ["ByteResponse", "JsonResponse"]
 
 
-class ContentResponse(object):
+class ByteResponse(object):
     def __init__(self, content: bytes):
         self._content = content
 
@@ -19,16 +18,12 @@ class ContentResponse(object):
         return "%dbytes" % len(self._content)
 
 
-class DictResponse(ContentResponse, dict):
+class JsonResponse(ByteResponse, dict):
     def __init__(self, content: bytes, encoding="utf8"):
-        ContentResponse.__init__(self, content)
+        ByteResponse.__init__(self, content)
         self._encoding = encoding
         if content:
             dict.__init__(self, json.loads(content))
 
     def __str__(self):
         return self.content.decode(self._encoding)
-
-
-JsonResponse = DictResponse
-ByteResponse = ContentResponse

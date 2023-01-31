@@ -6,14 +6,11 @@ import logging
 
 import requests
 
-from .client import HTTPClient
+from .http_client import HTTPClient
 
 
 if TYPE_CHECKING:
-    from .request import Request
-    from .response import ContentResponse
-
-    TResponse = TypeVar("TResponse", bound=ContentResponse)
+    from .http_request import Request
 
 __all__ = ["Client"]
 logger = logging.getLogger("open-request-core")

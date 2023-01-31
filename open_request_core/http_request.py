@@ -2,11 +2,11 @@
 # -*- coding=utf-8 -*-
 from typing import Generic, TypeVar, Type
 from urllib.parse import urlencode
-from .response import ContentResponse
+from .http_response import ByteResponse
 
 __all__ = ["Request"]
 
-TResponse = TypeVar("TResponse", bound=ContentResponse)
+TResponse = TypeVar("TResponse", bound=ByteResponse)
 
 
 class Request(Generic[TResponse]):
@@ -91,7 +91,7 @@ class Request(Generic[TResponse]):
 
     @property
     def resp_cls(self) -> Type[TResponse]:
-        return ContentResponse
+        return ByteResponse
 
     def __str__(self):
         s = "{} {}".format(self.__method, self.__uri)
