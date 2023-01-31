@@ -22,6 +22,7 @@ setup(
     packages=find_packages(exclude=["test*"]),
     extras_require={
         "requests": ["requests"],
+        "aiohttp": ["aiohttp"],
     },
     description="This is the core module of standard use for requests.",
     long_description=long_description,
